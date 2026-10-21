@@ -1,0 +1,11 @@
+#!/bin/zsh
+# A broken page is never committed: every inline <script> of each staged .html must parse (idea from the reels app).
+NODE=/opt/homebrew/bin/node; [ -x $NODE ] || NODE=$(command -v node)
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep '\.html$'); do
+  git show ":$f" | $NODE -e '
+    let s = require("fs").readFileSync(0, "utf8"), re = /<script([^>]*)>([\s\S]*?)<\/script>/g, m, bad = 0;
+    while ((m = re.exec(s))) { if (/src=|type="(application\/json|text\/template)"/.test(m[1])) continue;
+      try { new Function(m[2]); } catch (e) { console.error("pre-commit: " + process.argv[1] + ": " + e.message); bad = 1; } }
+    process.exit(bad);' "$f" || exit 1
+done
+exit 0

@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>LinkedIn Desk</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #f4f2ee; --card: #ffffff; --ink: #191919; --mute: #666666; --line: #e0dfdc; --blue: #0a66c2; --blue2: #e8f1fb;
+  --green: #057642; --green2: #e6f4ea; --red: #b24020; --red2: #fbe9e4; --amber: #915907; --amber2: #fdf3dc; --chip: #eef0f3;
+  --shadow: 0 0 0 1px rgba(0,0,0,.08), 0 2px 3px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #000000; --card: #1b1f23; --ink: #e9e9e9; --mute: #a0a4a8; --line: #2f3439; --blue: #71b7fb; --blue2: #12304d;
+    --green: #6fcf97; --green2: #12321f; --red: #f28b6c; --red2: #3a1d14; --amber: #f2c46d; --amber2: #3a2c0e; --chip: #2a2f34;
+    --shadow: 0 0 0 1px rgba(255,255,255,.08); }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font: 15px/1.42 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 90px; }
+a { color: var(--blue); }
+header { position: sticky; top: 0; z-index: 5; background: var(--card); box-shadow: var(--shadow); padding: calc(env(safe-area-inset-top) + 8px) 12px 0; }
+.top { display: flex; align-items: center; gap: 8px; }
+.logo { width: 28px; height: 28px; border-radius: 5px; background: var(--blue); color: #fff; font-weight: 700; display: grid; place-items: center; font-size: 15px; }
+@media (prefers-color-scheme: dark) { .logo { color: #000; } }
+.top h1 { font-size: 17px; margin: 0; flex: 1; }
+#upd { font-size: 12px; color: var(--mute); }
+.live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 5px; vertical-align: 1px; }
+.ibtn { border: 0; background: var(--chip); color: var(--ink); border-radius: 16px; min-width: 34px; height: 30px; font-size: 15px; }
+#tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
+#tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; border: 1px solid var(--line); background: var(--card); color: var(--mute); border-radius: 16px; padding: 5px 12px; font-size: 14px; font-weight: 600; }
+.tab.on { background: var(--green); border-color: var(--green); color: #fff; }
+@media (prefers-color-scheme: dark) { .tab.on { color: #000; } }
+.tab .n { font-weight: 400; opacity: .8; margin-left: 3px; }
+main { max-width: 640px; margin: 0 auto; padding: 10px 8px; }
+#lock { text-align: center; color: var(--mute); padding: 60px 20px; }
+.empty { text-align: center; color: var(--mute); padding: 40px 16px; }
+.sec { font-size: 13px; color: var(--mute); margin: 16px 6px 6px; text-transform: uppercase; letter-spacing: .04em; }
+.card { background: var(--card); border-radius: 10px; box-shadow: var(--shadow); margin: 0 0 12px; overflow: hidden; }
+.row { background: var(--card); border-radius: 10px; box-shadow: var(--shadow); margin: 0 0 8px; padding: 10px 12px; display: block; cursor: pointer; }
+.row .t { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.row .m { font-size: 13px; color: var(--mute); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+/* LinkedIn feed post */
+.li { padding: 12px 16px 4px; }
+.li-h { display: flex; gap: 8px; align-items: flex-start; }
+.av { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0a66c2, #5aa0e6); color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+.who b { display: block; font-size: 14px; }
+.who span { display: block; font-size: 12px; color: var(--mute); line-height: 1.3; }
+.li-t { white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.43; margin: 10px 0 8px; }
+.more { color: var(--mute); cursor: pointer; background: none; border: 0; padding: 0; font: inherit; }
+.more:hover { color: var(--blue); text-decoration: underline; }
+.media { position: relative; background: var(--chip); }
+.media img { display: block; width: 100%; height: auto; }
+.car { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.car::-webkit-scrollbar { display: none; }
+.car > div { flex: none; width: 100%; scroll-snap-align: start; min-height: 120px; display: grid; place-items: center; color: var(--mute); font-size: 13px; }
+.cnt { position: absolute; right: 10px; top: 10px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+.li-bar { display: flex; justify-content: space-around; border-top: 1px solid var(--line); margin-top: 6px; padding: 8px 0; color: var(--mute); font-size: 13px; font-weight: 600; }
+/* meta */
+.meta { padding: 10px 16px 14px; border-top: 1px solid var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.chip { background: var(--chip); border-radius: 12px; padding: 2px 9px; font-size: 12px; color: var(--ink); }
+.chip.st-pending, .chip.st-failed { background: var(--amber2); color: var(--amber); }
+.chip.st-approved, .chip.st-scheduled { background: var(--blue2); color: var(--blue); }
+.chip.st-published { background: var(--green2); color: var(--green); }
+.chip.st-trash, .chip.st-rejected { background: var(--red2); color: var(--red); }
+.chip.pend { background: var(--blue); color: #fff; }
+.lang { display: inline-flex; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.lang button { border: 0; background: none; color: var(--mute); padding: 3px 12px; font-size: 13px; font-weight: 600; }
+.lang button.on { background: var(--blue); color: #fff; }
+@media (prefers-color-scheme: dark) { .lang button.on { color: #000; } }
+.kv { font-size: 13px; color: var(--mute); margin: 6px 0; }
+.kv b { color: var(--ink); font-weight: 600; }
+.sc { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 8px 0; }
+.sc div { background: var(--chip); border-radius: 8px; text-align: center; padding: 6px 2px; font-size: 11px; color: var(--mute); }
+.sc div b { display: block; font-size: 16px; color: var(--ink); }
+.sc .avg { background: var(--blue2); }
+.sc .avg b { color: var(--blue); }
+ul.notes { margin: 6px 0; padding-left: 18px; font-size: 13px; }
+details { margin: 6px 0; font-size: 13px; }
+summary { cursor: pointer; color: var(--mute); }
+.hist div { color: var(--mute); padding: 2px 0; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 14px; }
+.b { border: 1px solid var(--blue); background: var(--card); color: var(--blue); border-radius: 18px; padding: 7px 14px; font-size: 14px; font-weight: 600; }
+.b.pri { background: var(--blue); color: #fff; }
+@media (prefers-color-scheme: dark) { .b.pri { color: #000; } }
+.b.red { border-color: var(--red); color: var(--red); }
+.b.gray { border-color: var(--line); color: var(--mute); }
+.b:disabled { opacity: .5; }
+.metr { display: flex; gap: 14px; font-size: 13px; color: var(--mute); margin-top: 4px; }
+.metr b { color: var(--ink); }
+/* calendar */
+.cal-h { display: flex; align-items: center; gap: 8px; margin: 2px 4px 10px; }
+.cal-h .sp { flex: 1; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: var(--card); border-radius: 10px; box-shadow: var(--shadow); padding: 8px; }
+.grid .wd { text-align: center; font-size: 11px; color: var(--mute); padding-bottom: 2px; }
+.day { min-height: 54px; border-radius: 8px; padding: 4px; font-size: 12px; color: var(--mute); position: relative; border: 1px solid transparent; }
+.day.out { opacity: .35; }
+.day.today { border-color: var(--blue); }
+.day.sel { background: var(--blue2); }
+.day .d { font-weight: 600; color: var(--ink); }
+.dot { display: block; margin-top: 3px; height: 16px; border-radius: 4px; font-size: 10px; line-height: 16px; text-align: center; overflow: hidden; white-space: nowrap; }
+.dot.free { border: 1.5px dashed var(--amber); color: var(--amber); background: var(--amber2); line-height: 13px; }
+.dot.busy { background: var(--blue); color: #fff; }
+.dot.done { background: var(--green); color: #fff; }
+.dot.wait { background: var(--chip); color: var(--ink); }
+@media (prefers-color-scheme: dark) { .dot.busy, .dot.done { color: #000; } }
+.slot { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 10px; box-shadow: var(--shadow); margin: 0 0 8px; padding: 10px 12px; cursor: pointer; }
+.slot .w { width: 74px; flex: none; font-size: 13px; color: var(--mute); }
+.slot .w b { display: block; color: var(--ink); font-size: 14px; }
+.slot .x { flex: 1; min-width: 0; }
+.slot .x .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slot.free { background: var(--amber2); box-shadow: none; border: 1.5px dashed var(--amber); cursor: default; }
+.slot.free .x { color: var(--amber); font-weight: 600; }
+.slot.past { opacity: .6; }
+/* today */
+.brief { white-space: pre-wrap; padding: 14px 16px; font-size: 14px; }
+.ck { display: flex; gap: 10px; align-items: flex-start; padding: 10px 16px; border-top: 1px solid var(--line); cursor: pointer; }
+.ck .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--mute); flex: none; display: grid; place-items: center; color: #fff; font-size: 14px; }
+.ck.done .box { background: var(--green); border-color: var(--green); }
+.ck.done .tx { color: var(--mute); text-decoration: line-through; }
+.ck.pend .box { border-style: dashed; }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; padding: 12px 16px; }
+.stats div { background: var(--chip); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--mute); }
+.stats div b { display: block; color: var(--ink); font-size: 16px; }
+/* sheet, form, toast */
+#sheet { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; transform: translateX(100%); transition: transform .2s; -webkit-overflow-scrolling: touch; }
+#sheet.on { transform: none; }
+.sh-h { position: sticky; top: 0; z-index: 2; background: var(--card); box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px; }
+.sh-h b { flex: 1; font-size: 15px; }
+#detail { max-width: 640px; margin: 0 auto; padding: 10px 8px 100px; }
+#form { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; }
+#form.on { display: flex; }
+.fbox { background: var(--card); width: 100%; max-width: 640px; border-radius: 14px 14px 0 0; padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px); }
+.fbox h3 { margin: 0 0 6px; font-size: 16px; }
+.fbox p { margin: 0 0 10px; font-size: 13px; color: var(--mute); }
+.fbox textarea { width: 100%; min-height: 120px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; background: var(--bg); color: var(--ink); resize: vertical; }
+.fbox .fa { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+#idea { position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px); z-index: 10; border: 0; background: var(--blue); color: #fff; border-radius: 26px; padding: 12px 18px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+@media (prefers-color-scheme: dark) { #idea { color: #000; } }
+#toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 80px); transform: translateX(-50%) translateY(20px); opacity: 0; transition: .2s; z-index: 50; background: #191919; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: 90vw; pointer-events: none; }
+#toast.on { opacity: 1; transform: translateX(-50%); }
+@media (prefers-color-scheme: dark) { #toast { background: #e9e9e9; color: #000; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><div class="logo">in</div><h1>LinkedIn Desk</h1><span id="upd"></span><button class="ibtn" id="rf" title="Обновить">⟳</button></div>
+  <div id="tabs"></div>
+</header>
+<main id="list"><div id="lock">Загружаю…</div></main>
+<div id="sheet"><div class="sh-h"><button class="ibtn" id="back">‹</button><b id="shT"></b></div><div id="detail"></div></div>
+<div id="form"><div class="fbox"><h3 id="fT"></h3><p id="fP"></p><textarea id="txt"></textarea>
+  <div class="fa"><button class="b gray" id="fC">Отмена</button><button class="b pri" id="fS">Отправить</button></div></div></div>
+<button id="idea">💡 Идея</button>
+<div id="toast"></div>
+<script>
+const APP_VER = "2026-10-21-a";  // bump on every change: an old cached copy (Telegram) reloads itself
+const REPO = "chagagagaga/li-desk";
+const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
+const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
+if (TG) { try { TG.ready(); TG.expand(); } catch (e) {} }
+const qs = new URLSearchParams(location.search), hs = new URLSearchParams(location.hash.slice(1));
+let K = qs.get("k") || hs.get("k");
+try { if (K) localStorage.setItem("lik", K); else K = localStorage.getItem("lik"); } catch (e) {}
+
+let PILLARS = { p1: "Что цепляет не-космического покупателя", p2: "От interesting до контракта", p3: "Разборы: Would a lender buy this?",
+  p4: "Путь: из e-commerce в космос" };  // the payload's «pillars» / «kinds» (engine core.py) take over when present
+let KINDS = { story: "История с цифрами", list: "Подборка / список", data: "Разбор данных", teardown: "Разбор компании",
+  framework: "Фреймворк (плохой совет → как правильно)", opinion: "Спорное мнение", news: "Новость + вывод", lessons: "Уроки известного человека" };
+const STATUS = { pending: "Ждёт тебя", editing: "Правлю", approved: "Одобрен", scheduled: "Запланирован", published: "Опубликован",
+  failed: "Ошибка выкладки", trash: "Мусор", rejected: "Переписываю", draft: "В работе", review: "В работе" };
+const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
+const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
+const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"]];
+const TABS = [["pending", "Ждут тебя"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["trash", "Мусор"], ["all", "Все"]];
+const WD = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const NOTE = { ap: "✅ Беру", ed: "✏️ Правки ушли", rw: "❌ Переписываю", tr: "🗑 В мусор", im: "🖼 Ищу другую картинку", pt: "🕒 Меняю время",
+  un: "↩️ Снимаю с выкладки", ck: "☑️ Отметил", idea: "💡 Идея ушла" };
+// what the post becomes right after a tap, until the Mac answers
+const OPT = { ap: "approved", ed: "editing", rw: "rejected", tr: "trash", im: "editing", un: "approved" };
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const toast = (t) => { const e = $("#toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove("on"), 3200); };
+const b64d = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+const b64e = (u) => { let s = ""; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+// ---------- crypto + fetch ----------
+let CK = null;
+async function ckey() { return CK || (CK = await crypto.subtle.importKey("raw", b64d(K), "AES-GCM", false, ["decrypt", "encrypt"])); }
+async function open(buf) { const u = new Uint8Array(buf); return crypto.subtle.decrypt({ name: "AES-GCM", iv: u.slice(0, 12) }, await ckey(), u.slice(12)); }
+async function sealB64(obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await ckey(), new TextEncoder().encode(JSON.stringify(obj))));
+  const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12); return b64e(all);
+}
+let GHT = "", apiOffUntil = 0;
+async function viaApi(path) {  // the API serves a fresh push at once; Pages rebuilds in ~1 min
+  if (Date.now() < apiOffUntil) throw new Error("api off");
+  const h = { Accept: "application/vnd.github.raw" }; if (GHT) h.Authorization = "Bearer " + GHT;
+  const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main", { headers: h, cache: "no-cache" });
+  if (r.status === 403 || r.status === 429) apiOffUntil = Date.now() + 10 * 60000;  // rate limit: Pages only for a while
+  if (!r.ok) throw new Error(r.status);
+  return r.arrayBuffer();
+}
+async function viaPages(path, fresh) {
+  const r = await fetch(path + (fresh ? "?t=" + Date.now() : ""), { cache: fresh ? "no-store" : "default" });
+  if (!r.ok) throw new Error(r.status);
+  return r.arrayBuffer();
+}
+async function gunzip(buf) { return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer(); }
+async function freshData() {
+  let buf; try { buf = await viaApi("data.gz.bin"); } catch (e) { buf = await viaPages("data.gz.bin", true); }
+  return JSON.parse(new TextDecoder().decode(await gunzip(await open(buf))));
+}
+// images are immutable (named by their hash): kept in the phone's cache after the first load
+const IMG = {}, IMGP = {};
+async function getBlob(path) {
+  let buf = null;
+  try { const c = await caches.open("li-img-v1"); const hit = await c.match(path); if (hit) buf = await hit.arrayBuffer(); } catch (e) {}
+  if (!buf) {
+    try { buf = await viaPages(path, false); } catch (e) { buf = await viaApi(path); }
+    try { const c = await caches.open("li-img-v1"); await c.put(path, new Response(buf.slice(0))); } catch (e) {}
+  }
+  return open(buf);
+}
+function imgUrl(path, type) {
+  if (IMG[path]) return Promise.resolve(IMG[path]);
+  return IMGP[path] || (IMGP[path] = getBlob(path).then((b) => (IMG[path] = URL.createObjectURL(new Blob([b], { type: type || "image/png" }))))
+    .catch((e) => { delete IMGP[path]; throw e; }));
+}
+function fillImages(root) {
+  (root || document).querySelectorAll("img[data-src]").forEach((im) => {
+    const p = im.dataset.src; im.removeAttribute("data-src");
+    imgUrl(p).then((u) => { im.src = u; }).catch(() => { im.alt = "картинка не загрузилась"; });
+  });
+}
+
+// ---------- state ----------
+let DATA = null, tab = ls.get("tab", "pending"), cur = null, LOADING = false;
+let LANG = ls.get("lang", "en"), OPEN = {}, calMode = ls.get("calMode", "month"), calSel = null;
+let PEND = ls.get("pend", {});
+const savePend = () => ls.set("pend", PEND);
+const pendOf = (p) => { const x = PEND[p.id]; if (!x) return null;
+  if (x.st !== p.status || Date.now() - x.t > 20 * 60000) { delete PEND[p.id]; savePend(); return null; } return x; };
+const stOf = (p) => { const x = pendOf(p); return x && OPT[x.a] ? OPT[x.a] : p.status; };
+const inTab = (p, t) => { const s = stOf(p);
+  if (t === "pending") return s === "pending" || s === "failed";
+  if (t === "plan") return s === "scheduled" || s === "approved";
+  if (t === "out") return s === "published";
+  if (t === "trash") return s === "trash";
+  return t === "all"; };
+const postText = (p, lang) => { const b = String((lang === "ru" ? p.body_ru : p.body_en) || ""), h = String(p.hook || "").trim();
+  if (lang === "ru") return b; return h && !b.trim().startsWith(h) ? h + "\n\n" + b : b; };
+const title = (p) => (String(p.hook || p.body_en || p.body_ru || "").trim().split("\n")[0] || p.id).slice(0, 140);
+const dm = (t) => { const m = /^(\d{4})-(\d\d)-(\d\d)[ T]?(\d\d:\d\d)?/.exec(t || ""); return m ? m[3] + "." + m[2] + (m[4] ? " " + m[4] : "") : String(t || ""); };
+const wdOf = (iso) => WD[(new Date(iso.slice(0, 10) + "T12:00:00").getDay() + 6) % 7];
+const avg = (sc) => { const v = SCORE.map(([k]) => sc && sc[k]).filter((x) => typeof x === "number"); return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : ""; };
+const almatyNow = () => new Date(Date.now() + 5 * 3600000).toISOString();  // Almaty = UTC+5
+const fmtN = (n) => typeof n === "number" ? (n >= 10000 ? (n / 1000).toFixed(1).replace(".0", "") + "k" : String(n)) : "–";
+
+// LinkedIn cuts the feed text at ~210 characters or 3 lines, whichever comes first, then «...ещё»
+function cutAt(t) {
+  let n = Math.min(t.length, 210), lines = 0;
+  for (let i = 0; i < n; i++) if (t[i] === "\n" && ++lines >= 3) { n = i; break; }
+  if (n >= t.length) return t.length;
+  const sp = t.lastIndexOf(" ", n); return sp > n - 25 && sp > 0 ? sp : n;
+}
+
+// ---------- render: post card ----------
+function liPreview(p) {
+  const lang = LANG, t = postText(p, lang), key = p.id + lang, n = cutAt(t), full = OPEN[key] || n >= t.length;
+  const txt = full ? esc(t) + (n < t.length ? ` <button class="more" data-less="${esc(key)}">свернуть</button>` : "")
+    : esc(t.slice(0, n).replace(/\s+$/, "")) + `<button class="more" data-more="${esc(key)}">...ещё</button>`;
+  let media = "";
+  const ims = p.images || [];
+  if (ims.length === 1 && p.format !== "carousel") media = `<div class="media"><img data-src="${esc(ims[0])}" alt=""></div>`;
+  else if (ims.length) media = `<div class="media"><div class="car" data-car="${esc(p.id)}">${ims.map((s) => `<div><img data-src="${esc(s)}" alt=""></div>`).join("")}</div><span class="cnt">1 / ${ims.length}</span></div>`;
+  if (p.pdf) media += `<div class="kv" style="padding:8px 16px 0"><a href="#" data-pdf="${esc(p.pdf)}">📄 Открыть PDF карусели</a></div>`;
+  return `<div class="li"><div class="li-h"><div class="av">AC</div><div class="who"><b>Alex Chagaydak</b>
+    <span>Helping satellite-data companies sell to non-space buyers</span><span>${p.status === "published" && p.published_at ? esc(dm(p.published_at)) : "сейчас"} · 🌐</span></div></div>
+    <div class="li-t">${txt || '<span class="more">нет текста</span>'}</div></div>${media}
+    <div class="li-bar"><span>👍 Нравится</span><span>💬 Коммент.</span><span>🔁 Репост</span><span>➤ Отправить</span></div>`;
+}
+function metaHtml(p) {
+  const st = stOf(p), pd = pendOf(p), t = postText(p, LANG), a = avg(p.scores);
+  const chips = [`<span class="chip st-${esc(st)}">${esc(STATUS[st] || st)}</span>`];
+  if (pd) chips.push(`<span class="chip pend">⏳ ${esc(NOTE[pd.a] || pd.a)}</span>`);
+  if (p.pillar) chips.push(`<span class="chip">${esc(p.pillar.toUpperCase())} · ${esc(PILLARS[p.pillar] || "")}</span>`);
+  if (p.kind) chips.push(`<span class="chip">${esc(KINDS[p.kind] || p.kind)}</span>`);
+  if (p.stage) chips.push(`<span class="chip">${esc(STAGE[p.stage] || p.stage)}</span>`);
+  if (p.format) chips.push(`<span class="chip">${esc(FORMAT[p.format] || p.format)}</span>`);
+  let h = `<div class="meta"><div class="chips" style="align-items:center"><span class="lang"><button data-lang="en" class="${LANG === "en" ? "on" : ""}">EN</button><button data-lang="ru" class="${LANG === "ru" ? "on" : ""}">RU</button></span>
+    <span class="chip">${t.length} знаков</span><span class="chip">${esc(p.id)}</span></div><div class="chips">${chips.join("")}</div>`;
+  if (p.plan_at) { const ce = (DATA.calendar || []).find((e) => e.id === p.id && p.plan_at.startsWith(e.date + " " + e.slot));
+    h += `<div class="kv">🕒 План: <b>${esc(wdOf(p.plan_at))} ${esc(dm(p.plan_at))}</b> Алматы${ce && ce.et ? " · " + esc(ce.et) : ""}</div>`; }
+  if (p.published_at) h += `<div class="kv">📢 Вышел: <b>${esc(dm(p.published_at))}</b>${p.permalink ? ` · <a href="${esc(p.permalink)}" target="_blank" rel="noopener">открыть в LinkedIn</a>` : ""}</div>`;
+  const m = p.metrics || {};
+  if (Object.keys(m).length) h += `<div class="metr"><span>👁 <b>${fmtN(m.impressions)}</b></span><span>👍 <b>${fmtN(m.reactions)}</b></span><span>💬 <b>${fmtN(m.comments)}</b></span><span>🔁 <b>${fmtN(m.reposts)}</b></span></div>`;
+  if (a) h += `<div class="sc"><div class="avg"><b>${a}</b>среднее</div>${SCORE.map(([k, n]) => `<div><b>${typeof (p.scores || {})[k] === "number" ? p.scores[k] : "–"}</b>${n}</div>`).join("")}</div>`;
+  if ((p.notes || []).length) h += `<div class="kv"><b>Заметки агентов</b></div><ul class="notes">${p.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
+  if ((p.sources || []).length) h += `<details><summary>Источники (${p.sources.length})</summary><ul class="notes">${p.sources.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.url)}</a>` : esc(s.title)}</li>`).join("")}</ul></details>`;
+  if ((p.history || []).length) h += `<details><summary>История (${p.history.length})</summary><div class="hist">${p.history.slice().reverse().map((x) => `<div>${esc(dm(x.t))} · ${esc(x.what)}</div>`).join("")}</div></details>`;
+  return h + "</div>";
+}
+function actsHtml(p) {
+  const st = stOf(p), id = esc(p.id), pd = !!pendOf(p);
+  const B = (a, t, cls) => `<button class="b ${cls || ""}" data-act="${a}" data-id="${id}" ${pd ? "disabled" : ""}>${t}</button>`;
+  if (st === "pending" || st === "failed")
+    return `<div class="acts">${B("ap", "✅ Беру", "pri")}${B("ed", "✏️ Правки")}${B("rw", "❌ Переписать")}${B("im", "🖼 Другая картинка")}${B("pt", "🕒 Время")}${B("tr", "🗑 Мусор", "red")}</div>`;
+  if (st === "scheduled" || st === "approved") return `<div class="acts">${B("pt", "🕒 Время", "pri")}${st === "scheduled" ? B("un", "↩️ Снять с выкладки", "red") : ""}${B("ed", "✏️ Правки")}</div>`;
+  return "";
+}
+const cardHtml = (p) => `<div class="card" data-card="${esc(p.id)}">${liPreview(p)}${metaHtml(p)}${actsHtml(p)}</div>`;
+function rowHtml(p) {
+  const st = stOf(p), m = p.metrics || {}, pd = pendOf(p);
+  const bits = [`<span class="chip st-${esc(st)}">${esc(STATUS[st] || st)}</span>`];
+  if (pd) bits.push(`<span class="chip pend">⏳ ${esc(NOTE[pd.a] || "")}</span>`);
+  if (p.pillar) bits.push(esc(p.pillar.toUpperCase()));
+  if (p.kind) bits.push(esc(KINDS[p.kind] || p.kind));
+  if (p.plan_at && st !== "published") bits.push("🕒 " + esc(wdOf(p.plan_at) + " " + dm(p.plan_at)));
+  if (p.published_at) bits.push("📢 " + esc(dm(p.published_at)));
+  if (st === "published" && Object.keys(m).length) bits.push(`👁 ${fmtN(m.impressions)} · 👍 ${fmtN(m.reactions)} · 💬 ${fmtN(m.comments)} · 🔁 ${fmtN(m.reposts)}`);
+  const a = avg(p.scores); if (a) bits.push("★ " + a);
+  return `<div class="row" data-open="${esc(p.id)}"><div class="t">${esc(title(p))}</div><div class="m">${bits.join("<span>·</span>")}</div></div>`;
+}
+
+// ---------- render: tabs ----------
+function renderTabs() {
+  const ps = DATA ? DATA.posts : [];
+  const cnt = { pending: ps.filter((p) => inTab(p, "pending")).length, plan: ps.filter((p) => inTab(p, "plan")).length,
+    out: ps.filter((p) => inTab(p, "out")).length, trash: ps.filter((p) => inTab(p, "trash")).length, all: ps.length,
+    today: DATA && DATA.today ? (DATA.today.checklist || []).filter((c) => !ckDone(c)).length : 0 };
+  $("#tabs").innerHTML = TABS.map(([k, n]) => `<button class="tab ${tab === k ? "on" : ""}" data-t="${k}">${n}${cnt[k] ? `<span class="n">${cnt[k]}</span>` : ""}</button>`).join("");
+}
+const byPlan = (a, b) => String(a.plan_at || "9").localeCompare(String(b.plan_at || "9"));
+const byNew = (a, b) => String(b.published_at || b.created || b.id).localeCompare(String(a.published_at || a.created || a.id));
+function render() {
+  renderTabs();
+  if (!DATA) return;
+  const ps = DATA.posts || [];
+  let h = "";
+  if (tab === "pending") {
+    const l = ps.filter((p) => inTab(p, "pending")).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    h = l.length ? l.map(cardHtml).join("") : `<div class="empty">Всё разобрано. Новые посты появятся здесь сами.</div>`;
+  } else if (tab === "cal") h = calHtml();
+  else if (tab === "today") h = todayHtml();
+  else {
+    const l = ps.filter((p) => inTab(p, tab)).sort(tab === "plan" ? byPlan : byNew);
+    if (tab === "all") {
+      const order = ["pending", "failed", "editing", "rejected", "draft", "review", "approved", "scheduled", "published", "trash"];
+      const g = {}; l.forEach((p) => { (g[stOf(p)] = g[stOf(p)] || []).push(p); });
+      h = Object.keys(g).sort((a, b) => order.indexOf(a) - order.indexOf(b)).map((s) => `<div class="sec">${esc(STATUS[s] || s)} · ${g[s].length}</div>${g[s].map(rowHtml).join("")}`).join("");
+    } else h = l.map(rowHtml).join("");
+    if (!l.length) h = `<div class="empty">${{ plan: "Нет запланированных постов", out: "Пока ничего не опубликовано", trash: "Мусор пуст", all: "Постов пока нет" }[tab]}</div>`;
+  }
+  $("#list").innerHTML = h;
+  fillImages($("#list"));
+}
+
+// calendar: month grid of the data's range (past 14 + next 21 days) + the agenda of the slots
+function calHtml() {
+  const cal = DATA.calendar || [], ps = DATA.posts || [], today = almatyNow().slice(0, 10), nowT = almatyNow().slice(0, 16).replace("T", " ");
+  const P = (id) => ps.find((p) => p.id === id), etS = (e) => e.et ? `<br><span style="font-size:11px">${esc(e.et)}</span>` : "";
+  const kind = (e) => { if (!e.id) return "free"; const p = P(e.id); if (!p) return "wait"; const s = stOf(p);
+    return s === "published" ? "done" : s === "scheduled" || s === "approved" ? "busy" : "wait"; };
+  let h = `<div class="cal-h"><span class="lang"><button data-cm="month" class="${calMode === "month" ? "on" : ""}">Месяц</button><button data-cm="list" class="${calMode === "list" ? "on" : ""}">Список</button></span><span class="sp"></span>
+    <span class="kv">${cal.filter((e) => !e.id && e.date >= today).length} свободных слотов впереди</span></div>`;
+  const slotRow = (e) => { const p = e.id ? P(e.id) : null, past = (e.date + " " + e.slot) < nowT;
+    if (!e.id) return `<div class="slot free ${past ? "past" : ""}"><div class="w"><b>${wdOf(e.date)} ${dm(e.date)}</b>${esc(e.slot)}${etS(e)}</div><div class="x">${past ? "Слот прошёл пустым" : "Свободно"}</div></div>`;
+    return `<div class="slot ${past ? "past" : ""}" data-open="${esc(e.id)}"><div class="w"><b>${wdOf(e.date)} ${dm(e.date)}</b>${esc(e.slot)}${etS(e)}</div><div class="x"><div class="t">${esc(p ? title(p) : e.id)}</div>
+      <div class="kv" style="margin:2px 0 0">${p ? `<span class="chip st-${esc(stOf(p))}">${esc(STATUS[stOf(p)] || "")}</span>` : ""} ${p && p.pillar ? esc(p.pillar.toUpperCase()) : ""}</div></div></div>`; };
+  if (calMode === "list") {
+    const fut = cal.filter((e) => e.date >= today), past = cal.filter((e) => e.date < today).reverse();
+    h += `<div class="sec">Впереди</div>` + (fut.map(slotRow).join("") || `<div class="empty">Слотов нет</div>`);
+    if (past.length) h += `<div class="sec">Прошлые 14 дней</div>` + past.map(slotRow).join("");
+    return h;
+  }
+  if (!cal.length) return h + `<div class="empty">Календарь пуст</div>`;
+  const d0 = new Date(cal[0].date + "T12:00:00Z"), d1 = new Date(cal[cal.length - 1].date + "T12:00:00Z");
+  const first = new Date(Math.min(d0, new Date(today + "T12:00:00Z"))), start = new Date(first); start.setUTCDate(start.getUTCDate() - (start.getUTCDay() + 6) % 7);
+  const lastD = new Date(Math.max(d1, new Date(today + "T12:00:00Z"))), end = new Date(lastD); end.setUTCDate(end.getUTCDate() + 6 - (end.getUTCDay() + 6) % 7);
+  calSel = calSel || today;
+  h += `<div class="grid">${WD.map((w) => `<div class="wd">${w}</div>`).join("")}`;
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const iso = d.toISOString().slice(0, 10), es = cal.filter((e) => e.date === iso);
+    const inR = iso >= cal[0].date && iso <= cal[cal.length - 1].date;
+    h += `<div class="day ${inR ? "" : "out"} ${iso === today ? "today" : ""} ${iso === calSel ? "sel" : ""}" data-day="${iso}"><span class="d">${+iso.slice(8)}</span>
+      ${es.map((e) => `<span class="dot ${kind(e)}" ${e.id ? `data-open="${esc(e.id)}"` : ""}>${e.id ? esc(e.slot) : "своб."}</span>`).join("")}</div>`;
+  }
+  h += `</div>`;
+  const sel = cal.filter((e) => e.date === calSel);
+  h += `<div class="sec">${wdOf(calSel)} ${dm(calSel)}</div>` + (sel.length ? sel.map(slotRow).join("") : `<div class="empty" style="padding:16px">В этот день слотов нет</div>`);
+  const nf = cal.filter((e) => !e.id && e.date >= today).slice(0, 3);
+  if (nf.length) h += `<div class="sec">Ближайшие свободные</div>` + nf.map(slotRow).join("");
+  return h;
+}
+
+const ckDone = (c) => { const x = PEND["ck:" + c.key]; if (x && (x.st !== String(!!c.done) || Date.now() - x.t > 20 * 60000)) { delete PEND["ck:" + c.key]; savePend(); return !!c.done; }
+  return x ? !c.done : !!c.done; };
+function todayHtml() {
+  const t = DATA.today || {}, s = DATA.stats || {};
+  let h = `<div class="card"><div class="li-h" style="padding:14px 16px 0"><b>☀️ Сегодня${t.date ? ", " + esc(wdOf(t.date)) + " " + esc(dm(t.date)) : ""}</b></div>
+    <div class="brief">${t.brief ? esc(t.brief) : '<span class="more">Бриф дня ещё не готов</span>'}</div>`;
+  h += (t.checklist || []).map((c) => `<div class="ck ${ckDone(c) ? "done" : ""} ${PEND["ck:" + c.key] ? "pend" : ""}" data-ck="${esc(c.key)}"><span class="box">${ckDone(c) ? "✓" : ""}</span><span class="tx">${esc(c.text)}</span></div>`).join("");
+  h += `</div>`;
+  const kvs = (o) => Object.keys(o || {}).map((k) => `<div><b>${esc(typeof o[k] === "object" ? JSON.stringify(o[k]) : o[k])}</b>${esc(k)}</div>`).join("");
+  if (s.week && Object.keys(s.week).length) h += `<div class="sec">Неделя</div><div class="card"><div class="stats">${kvs(s.week)}</div></div>`;
+  if (s.goals && Object.keys(s.goals).length) h += `<div class="sec">Цели</div><div class="card"><div class="stats">${kvs(s.goals)}</div></div>`;
+  return h;
+}
+
+// ---------- detail sheet ----------
+function openPost(id) {
+  const p = DATA && DATA.posts.find((x) => x.id === id); if (!p) { toast("Пост не найден"); return; }
+  cur = id; $("#shT").textContent = id; $("#detail").innerHTML = cardHtml(p); fillImages($("#detail"));
+  $("#sheet").classList.add("on"); $("#sheet").scrollTop = 0; document.body.style.overflow = "hidden";
+  if (TG) try { TG.BackButton.show(); } catch (e) {}
+}
+function closePost() { cur = null; $("#sheet").classList.remove("on"); document.body.style.overflow = ""; $("#detail").innerHTML = "";
+  if (TG) try { TG.BackButton.hide(); } catch (e) {} render(); }
+function refreshOpen() { if (!cur) return; const p = DATA.posts.find((x) => x.id === cur); if (!p) return closePost();
+  const y = $("#sheet").scrollTop; $("#detail").innerHTML = cardHtml(p); fillImages($("#detail")); $("#sheet").scrollTop = y; }
+
+// ---------- actions ----------
+const FORMS = {
+  ed: ["✏️ Правки", "Напиши, что поправить. Агенты перепишут и вернут на проверку.", true],
+  rw: ["❌ Переписать", "Почему не подошло? Можно оставить пустым.", false],
+  im: ["🖼 Другая картинка", "Какую картинку хочешь? Можно оставить пустым.", false],
+  pt: ["🕒 Время", "Когда выложить: «пт 16:30», «завтра 10:00» или «2026-10-30 16:30». Время Алматы.", true],
+  idea: ["💡 Идея", "Идея для поста: тема, факт, ссылка. Агенты возьмут в работу.", true],
+};
+let FORM = null;
+function ask(a, id) {
+  const f = FORMS[a]; if (!f) return send(a, id, "");
+  FORM = { a, id, need: f[2] }; $("#fT").textContent = f[0]; $("#fP").textContent = f[1];
+  $("#txt").value = ls.get("draft:" + a + id, ""); $("#form").classList.add("on"); setTimeout(() => $("#txt").focus(), 50);
+}
+async function sendIssue(obj) {  // an encrypted GitHub issue; the Mac reads it within seconds
+  const r = await fetch("https://api.github.com/repos/" + REPO + "/issues", { method: "POST",
+    headers: { Authorization: "Bearer " + GHT, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+    body: JSON.stringify({ title: "li-action", body: await sealB64(obj) }) });
+  if (!r.ok) throw new Error(r.status);
+}
+function markPend(a, id) {
+  if (a === "ck") { const c = ((DATA.today || {}).checklist || []).find((x) => x.key === id); PEND["ck:" + id] = { a, t: Date.now(), st: String(!!(c && c.done)) }; }
+  else if (a !== "idea") { const p = DATA.posts.find((x) => x.id === id); if (p) PEND[id] = { a, t: Date.now(), st: p.status }; }
+  savePend(); render(); refreshOpen();
+}
+const safeStart = (s) => String(s).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 60);
+function send(a, id, text) {
+  const obj = { a, id, text: text || "", t: Date.now() };
+  if (GHT) {
+    sendIssue(obj).then(() => { markPend(a, id); toast(NOTE[a] + ": принято"); setTimeout(load, 12000); })
+      .catch(() => toast("Не отправилось, проверь интернет и нажми ещё раз"));
+    return;
+  }
+  if (KB) { try { markPend(a, id); TG.sendData(JSON.stringify(obj)); return; } catch (e) {} }  // Telegram closes the app here
+  if (!DATA.bot) { toast("Бот не настроен: отправить некуда"); return; }
+  if (text) { try { navigator.clipboard.writeText(text); } catch (e) {} }
+  markPend(a, id);
+  const link = `https://t.me/${DATA.bot}?start=${safeStart(a + "_" + id)}`;
+  toast(NOTE[a] + (text ? ": текст скопирован, вставь его в чат с ботом" : ""));
+  setTimeout(load, 12000);
+  setTimeout(() => { if (TG) TG.openTelegramLink(link); else location.href = link; }, text ? 900 : 300);
+}
+$("#fC").onclick = () => { $("#form").classList.remove("on"); FORM = null; };
+$("#form").onclick = (e) => { if (e.target.id === "form") $("#fC").onclick(); };
+$("#txt").oninput = () => { if (FORM) ls.set("draft:" + FORM.a + FORM.id, $("#txt").value); };
+$("#fS").onclick = () => {
+  if (!FORM) return; const t = $("#txt").value.trim();
+  if (FORM.need && !t) { toast("Напиши текст"); return; }
+  const f = FORM; FORM = null; $("#form").classList.remove("on");
+  try { localStorage.removeItem("draft:" + f.a + f.id); } catch (e) {}
+  send(f.a, f.id, t);
+};
+$("#idea").onclick = () => ask("idea", "new");
+
+// ---------- events ----------
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  const mo = t.closest("[data-more]"); if (mo) { OPEN[mo.dataset.more] = 1; e.stopPropagation(); return rerender(); }
+  const le = t.closest("[data-less]"); if (le) { delete OPEN[le.dataset.less]; e.stopPropagation(); return rerender(); }
+  const lg = t.closest("[data-lang]"); if (lg) { LANG = lg.dataset.lang; ls.set("lang", LANG); return rerender(); }
+  const cm = t.closest("[data-cm]"); if (cm) { calMode = cm.dataset.cm; ls.set("calMode", calMode); return render(); }
+  const ac = t.closest("[data-act]"); if (ac) { if (!ac.disabled) ask(ac.dataset.act, ac.dataset.id); return; }
+  const ck = t.closest("[data-ck]"); if (ck) { if (!PEND["ck:" + ck.dataset.ck]) send("ck", ck.dataset.ck, ""); return; }
+  const pdf = t.closest("[data-pdf]"); if (pdf) { e.preventDefault(); toast("Открываю PDF…");
+    imgUrl(pdf.dataset.pdf, "application/pdf").then((u) => window.open(u, "_blank") || (location.href = u)).catch(() => toast("PDF не загрузился")); return; }
+  const op = t.closest("[data-open]"); if (op) { e.stopPropagation(); return openPost(op.dataset.open); }
+  const dy = t.closest("[data-day]"); if (dy) { calSel = dy.dataset.day; return render(); }
+  const tb = t.closest(".tab"); if (tb) { tab = tb.dataset.t; ls.set("tab", tab); render(); window.scrollTo(0, 0); }
+});
+function rerender() { render(); refreshOpen(); }
+document.addEventListener("scroll", (e) => {  // carousel page counter
+  const c = e.target; if (!c.classList || !c.classList.contains("car")) return;
+  const n = c.parentNode.querySelector(".cnt"); if (n) n.textContent = (Math.round(c.scrollLeft / c.clientWidth) + 1) + " / " + c.children.length;
+}, true);
+$("#back").onclick = closePost;
+if (TG) try { TG.BackButton.onClick(closePost); } catch (e) {}
+$("#rf").onclick = async () => { $("#rf").textContent = "…"; try { await load(); toast("Обновлено"); } finally { $("#rf").textContent = "⟳"; } };
+
+// ---------- load ----------
+async function load() {
+  if (!K) { $("#list").innerHTML = '<div id="lock">Открой ссылку из бота: в ней ключ.</div>'; return; }
+  if (LOADING) return; LOADING = true;
+  try {
+    const prev = DATA, fresh = await freshData();
+    DATA = fresh; ls.set("dcache", DATA); applyDicts(); GHT = (DATA.gh && DATA.gh.token) || "";
+    $("#upd").innerHTML = '<span class="live"></span>' + esc(DATA.updated || "");
+    if (DATA.app_ver && DATA.app_ver !== APP_VER && !sessionStorage.getItem("rl" + DATA.app_ver)) {
+      sessionStorage.setItem("rl" + DATA.app_ver, "1");
+      location.replace(location.pathname + "?v=" + Date.now() + (qs.get("k") ? "&k=" + encodeURIComponent(K) : "") + (location.hash || "")); return;
+    }
+    if (prev) { const nw = DATA.posts.filter((p) => p.status === "pending" && !(prev.posts || []).some((o) => o.id === p.id && o.status === "pending"));
+      if (nw.length) toast("🆕 Ждут тебя: " + nw.length); }
+    render(); refreshOpen();
+  } catch (e) {
+    if (!DATA) $("#list").innerHTML = '<div id="lock">Не открылось: неверный ключ или нет сети.</div>';
+    else $("#upd").innerHTML = "⚠️ нет сети · " + esc(DATA.updated || "");
+  } finally { LOADING = false; }
+}
+function applyDicts() { if (DATA && DATA.pillars && Object.keys(DATA.pillars).length) PILLARS = DATA.pillars; if (DATA && DATA.kinds && Object.keys(DATA.kinds).length) KINDS = DATA.kinds; }
+try { const c = ls.get("dcache", null); if (c && K) { DATA = c; applyDicts(); GHT = (DATA.gh && DATA.gh.token) || ""; $("#upd").textContent = "⏳ " + (DATA.updated || ""); render(); } } catch (e) {}
+renderTabs();
+load().then(() => { const id = qs.get("p"); if (id && DATA) openPost(id); });
+setInterval(() => { if (!document.hidden) load(); }, 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+</script>
+</body>
+</html>
