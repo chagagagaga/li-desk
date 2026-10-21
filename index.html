@@ -160,7 +160,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-21-a";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-21-b";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -173,7 +173,7 @@ let PILLARS = { p1: "Что цепляет не-космического пок�
   p4: "Путь: из e-commerce в космос" };  // the payload's «pillars» / «kinds» (engine core.py) take over when present
 let KINDS = { story: "История с цифрами", list: "Подборка / список", data: "Разбор данных", teardown: "Разбор компании",
   framework: "Фреймворк (плохой совет → как правильно)", opinion: "Спорное мнение", news: "Новость + вывод", lessons: "Уроки известного человека" };
-const STATUS = { pending: "Ждёт тебя", editing: "Правлю", approved: "Одобрен", scheduled: "Запланирован", published: "Опубликован",
+const STATUS = { review: "Агенты проверяют", reviewed: "Готовлю картинку", held: "Не прошёл проверку", pending: "Ждёт тебя", editing: "Правлю", approved: "Одобрен", scheduled: "Запланирован", published: "Опубликован",
   failed: "Ошибка выкладки", trash: "Мусор", rejected: "Переписываю", draft: "В работе", review: "В работе" };
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
