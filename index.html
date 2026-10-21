@@ -162,7 +162,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-21-e";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-21-f";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -206,16 +206,21 @@ async function sealB64(obj) {
   const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12); return b64e(all);
 }
 let GHT = "", apiOffUntil = 0;
+// Alex 21.10 «висит в Загружаю»: a stalled request on a phone network never settled, so every fetch now has a deadline
+function tfetch(url, opt, ms) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 8000);
+  return fetch(url, Object.assign({}, opt, { signal: c.signal })).finally(() => clearTimeout(t));
+}
 async function viaApi(path) {  // the API serves a fresh push at once; Pages rebuilds in ~1 min
   if (Date.now() < apiOffUntil) throw new Error("api off");
   const h = { Accept: "application/vnd.github.raw" }; if (GHT) h.Authorization = "Bearer " + GHT;
-  const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main", { headers: h, cache: "no-cache" });
+  const r = await tfetch("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main", { headers: h, cache: "no-store" }, 7000);
   if (r.status === 403 || r.status === 429) apiOffUntil = Date.now() + 10 * 60000;  // rate limit: Pages only for a while
   if (!r.ok) throw new Error(r.status);
   return r.arrayBuffer();
 }
 async function viaPages(path, fresh) {
-  const r = await fetch(path + (fresh ? "?t=" + Date.now() : ""), { cache: fresh ? "no-store" : "default" });
+  const r = await tfetch(path + (fresh ? "?t=" + Date.now() : ""), { cache: fresh ? "no-store" : "default" }, 10000);
   if (!r.ok) throw new Error(r.status);
   return r.arrayBuffer();
 }
@@ -514,7 +519,7 @@ $("#rf").onclick = async () => { $("#rf").textContent = "…"; try { await load(
 // ---------- load ----------
 async function load() {
   if (!K) { $("#list").innerHTML = '<div id="lock">Открой ссылку из бота: в ней ключ.</div>'; return; }
-  if (LOADING) return; LOADING = true;
+  if (LOADING && Date.now() - LOADING < 25000) return; LOADING = Date.now();  // a stuck run can't block the next one
   try {
     const prev = DATA, fresh = await freshData();
     DATA = fresh; ls.set("dcache", DATA); applyDicts(); GHT = (DATA.gh && DATA.gh.token) || "";
@@ -527,7 +532,7 @@ async function load() {
       if (nw.length) toast("🆕 Ждут тебя: " + nw.length); }
     render(); refreshOpen();
   } catch (e) {
-    if (!DATA) $("#list").innerHTML = '<div id="lock">Не открылось: неверный ключ или нет сети.</div>';
+    if (!DATA) { $("#list").innerHTML = '<div id="lock">Нет связи, пробую ещё раз…</div>'; setTimeout(load, 3000); }
     else $("#upd").innerHTML = "⚠️ нет сети · " + esc(DATA.updated || "");
   } finally { LOADING = false; }
 }
@@ -535,7 +540,8 @@ function applyDicts() { if (DATA && DATA.pillars && Object.keys(DATA.pillars).le
 try { const c = ls.get("dcache", null); if (c && K) { DATA = c; applyDicts(); GHT = (DATA.gh && DATA.gh.token) || ""; $("#upd").textContent = "⏳ " + (DATA.updated || ""); render(); } } catch (e) {}
 renderTabs();
 load().then(() => { const id = qs.get("p"); if (id && DATA) openPost(id); });
-setInterval(() => { if (!document.hidden) load(); }, 15000);
+setInterval(() => { if (!document.hidden) load(); }, 6000);  // the bot pushes every change within ~3 s
+window.addEventListener("online", () => load());
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 </script>
 </body>
