@@ -160,7 +160,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-21-b";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-21-c";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -316,7 +316,7 @@ function actsHtml(p) {
   const st = stOf(p), id = esc(p.id), pd = !!pendOf(p);
   const B = (a, t, cls) => `<button class="b ${cls || ""}" data-act="${a}" data-id="${id}" ${pd ? "disabled" : ""}>${t}</button>`;
   if (st === "pending" || st === "failed")
-    return `<div class="acts">${B("ap", "✅ Беру", "pri")}${B("ed", "✏️ Правки")}${B("rw", "❌ Переписать")}${B("im", "🖼 Другая картинка")}${B("pt", "🕒 Время")}${B("tr", "🗑 Мусор", "red")}</div>`;
+    return `<div class="acts">${B("ap", "✅ Беру", "pri")}${B("fx", "🔧 Мелочи агентов")}${B("ed", "✏️ Правки")}${B("rw", "❌ Переписать")}${B("im", "🖼 Другая картинка")}${B("pt", "🕒 Время")}${B("tr", "🗑 Мусор", "red")}</div>`;
   if (st === "scheduled" || st === "approved") return `<div class="acts">${B("pt", "🕒 Время", "pri")}${st === "scheduled" ? B("un", "↩️ Снять с выкладки", "red") : ""}${B("ed", "✏️ Правки")}</div>`;
   return "";
 }
