@@ -532,7 +532,8 @@ async function load() {
       if (nw.length) toast("🆕 Ждут тебя: " + nw.length); }
     render(); refreshOpen();
   } catch (e) {
-    if (!DATA) { $("#list").innerHTML = '<div id="lock">Нет связи, пробую ещё раз…</div>'; setTimeout(load, 3000); }
+    if (!DATA && e && e.name === "OperationError") $("#list").innerHTML = '<div id="lock">Неверный ключ: открой ссылку из бота (/app).</div>';
+    else if (!DATA) { $("#list").innerHTML = '<div id="lock">Нет связи, пробую ещё раз…</div>'; setTimeout(load, 3000); }
     else $("#upd").innerHTML = "⚠️ нет сети · " + esc(DATA.updated || "");
   } finally { LOADING = false; }
 }
