@@ -77,6 +77,10 @@ main { max-width: 640px; margin: 0 auto; padding: 10px 8px; }
 .lang button.on { background: var(--blue); color: #fff; }
 @media (prefers-color-scheme: dark) { .lang button.on { color: #000; } }
 .kv { font-size: 13px; color: var(--mute); margin: 6px 0; }
+.nt { width: 100%; border-collapse: collapse; font-size: 13px; }
+.nt th, .nt td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line, rgba(127,127,127,.2)); white-space: nowrap; }
+.nt td:first-child { white-space: normal; min-width: 180px; }
+.nt th { color: var(--mute); font-weight: 600; }
 .kv b { color: var(--ink); font-weight: 600; }
 .sc { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 8px 0; }
 .sc div { background: var(--chip); border-radius: 8px; text-align: center; padding: 6px 2px; font-size: 11px; color: var(--mute); }
@@ -162,7 +166,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-29-b";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-29-c";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -180,7 +184,7 @@ const STATUS = { review: "Агенты проверяют", reviewed: "Гото�
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
 const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"]];
-const TABS = [["pending", "Ждут тебя"], ["reserve", "Резерв"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["trash", "Мусор"], ["all", "Все"]];
+const TABS = [["pending", "Ждут тебя"], ["reserve", "Резерв"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["nums", "Цифры"], ["trash", "Мусор"], ["all", "Все"]];
 const WD = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const NOTE = { ap: "✅ Беру", ed: "✏️ Правки ушли", rw: "❌ Переписываю", tr: "🗑 В мусор", im: "🖼 Ищу другую картинку", pt: "🕒 Меняю время",
   un: "↩️ Снимаю с выкладки", ck: "☑️ Отметил", idea: "💡 Идея ушла" };
@@ -362,6 +366,7 @@ function render() {
     h = l.length ? l.map(cardHtml).join("") : `<div class="empty">Всё разобрано. Новые посты появятся здесь сами.</div>`;
   } else if (tab === "cal") h = calHtml();
   else if (tab === "today") h = todayHtml();
+  else if (tab === "nums") h = numsHtml();
   else {
     const l = ps.filter((p) => inTab(p, tab)).sort(tab === "plan" ? byPlan : byNew);
     if (tab === "all") {
@@ -424,6 +429,32 @@ function todayHtml() {
   const kvs = (o) => Object.keys(o || {}).map((k) => `<div><b>${esc(typeof o[k] === "object" ? JSON.stringify(o[k]) : o[k])}</b>${esc(k)}</div>`).join("");
   if (s.week && Object.keys(s.week).length) h += `<div class="sec">Неделя</div><div class="card"><div class="stats">${kvs(s.week)}</div></div>`;
   if (s.goals && Object.keys(s.goals).length) h += `<div class="sec">Цели</div><div class="card"><div class="stats">${kvs(s.goals)}</div></div>`;
+  return h;
+}
+
+function numsHtml() {
+  const n = DATA.numbers || {}, g = n.goals || {}, now = g.now || {}, tg = g.targets || {}, names = g.manual_names || {};
+  const cell = (v) => (v === null || v === undefined || v === "") ? "·" : esc(String(v));
+  let h = `<div class="sec">Цели этой недели</div><div class="card"><div class="stats">`;
+  h += `<div><b>${cell(now.posts)}${tg.posts ? " / " + esc(tg.posts) : ""}</b>постов</div>`;
+  h += `<div><b>${cell(now.comments)}${tg.comments ? " / " + esc(tg.comments) : ""}</b>комментариев</div>`;
+  h += `<div><b>${cell(now.followers)}${now.followers_delta !== undefined ? " (" + (now.followers_delta >= 0 ? "+" : "") + esc(now.followers_delta) + ")" : ""}</b>подписчиков</div>`;
+  h += `<div><b>${cell(now.profile_views)}</b>просмотров профиля</div><div><b>${cell(now.search_appearances)}</b>в поиске</div></div></div>`;
+  const wk = (g.weeks || []).slice().reverse();
+  if (wk.length) {
+    h += `<div class="sec">По неделям</div><div class="card" style="overflow-x:auto"><table class="nt"><tr><th>Неделя</th><th>Посты</th><th>Комм.</th><th>Подп.</th>${Object.values(names).map((x) => `<th>${esc(x)}</th>`).join("")}</tr>`;
+    h += wk.map((w) => { const a = w.auto || {}, m = w.manual || {};
+      return `<tr><td>${esc(w.week)}</td><td>${cell(a.posts)}</td><td>${cell(a.comments)}</td><td>${cell(a.followers)}</td>${Object.keys(names).map((k) => `<td>${cell(m[k])}</td>`).join("")}</tr>`; }).join("");
+    h += `</table></div>`;
+  }
+  const ps = n.posts || [];
+  h += `<div class="sec">Посты</div>`;
+  if (!ps.length) h += `<div class="empty">Цифр пока нет. В пятницу бот попросит экспорт аналитики.</div>`;
+  else {
+    h += `<div class="card" style="overflow-x:auto"><table class="nt"><tr><th>Пост</th><th>Показы</th><th>Реакц.</th><th>Комм.</th><th>Сохр.</th><th>Пересл.</th><th>Профиль</th></tr>`;
+    h += ps.map((p) => `<tr data-open="${esc(p.id)}"><td><span class="pid">${esc(dm(p.at || ""))}</span> ${esc(p.hook || p.id)}</td><td>${cell(p.impressions)}</td><td>${cell(p.reactions)}</td><td>${cell(p.comments)}</td><td>${cell(p.saves)}</td><td>${cell(p.sends)}</td><td>${cell(p.profile_views)}</td></tr>`).join("");
+    h += `</table></div>`;
+  }
   return h;
 }
 
