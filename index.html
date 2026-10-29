@@ -166,7 +166,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-29-c";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-29-d";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -184,7 +184,7 @@ const STATUS = { review: "Агенты проверяют", reviewed: "Гото�
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
 const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"]];
-const TABS = [["pending", "Ждут тебя"], ["reserve", "Резерв"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["nums", "Цифры"], ["trash", "Мусор"], ["all", "Все"]];
+const TABS = [["pending", "Ждут тебя"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["nums", "Цифры"], ["trash", "Мусор"], ["all", "Все"]];
 const WD = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const NOTE = { ap: "✅ Беру", ed: "✏️ Правки ушли", rw: "❌ Переписываю", tr: "🗑 В мусор", im: "🖼 Ищу другую картинку", pt: "🕒 Меняю время",
   un: "↩️ Снимаю с выкладки", ck: "☑️ Отметил", idea: "💡 Идея ушла" };
@@ -257,7 +257,7 @@ function fillImages(root) {
 }
 
 // ---------- state ----------
-let DATA = null, tab = ls.get("tab", "pending"), cur = null, LOADING = false;
+let DATA = null, tab = ls.get("tab", "pending") === "reserve" ? "pending" : ls.get("tab", "pending"), cur = null, LOADING = false;
 let LANG = ls.get("lang", "en"), OPEN = {}, calMode = ls.get("calMode", "month"), calSel = null;
 let PEND = ls.get("pend", {});
 const savePend = () => ls.set("pend", PEND);
@@ -265,8 +265,7 @@ const pendOf = (p) => { const x = PEND[p.id]; if (!x) return null;
   if (x.st !== p.status || Date.now() - x.t > 20 * 60000) { delete PEND[p.id]; savePend(); return null; } return x; };
 const stOf = (p) => { const x = pendOf(p); return x && OPT[x.a] ? OPT[x.a] : p.status; };
 const inTab = (p, t) => { const s = stOf(p);
-  if (t === "pending") return s === "pending" || s === "failed";
-  if (t === "reserve") return s === "reserve";
+  if (t === "pending") return s === "pending" || s === "failed" || s === "reserve";  // Alex 29.10: no Reserve tab, ready posts go to him
   if (t === "plan") return s === "scheduled" || s === "approved";
   if (t === "out") return s === "published";
   if (t === "trash") return s === "trash";
