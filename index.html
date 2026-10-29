@@ -162,7 +162,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-21-f";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-29-a";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -175,12 +175,12 @@ let PILLARS = { p1: "Что цепляет не-космического пок�
   p4: "Путь: из e-commerce в космос" };  // the payload's «pillars» / «kinds» (engine core.py) take over when present
 let KINDS = { story: "История с цифрами", list: "Подборка / список", data: "Разбор данных", teardown: "Разбор компании",
   framework: "Фреймворк (плохой совет → как правильно)", opinion: "Спорное мнение", news: "Новость + вывод", lessons: "Уроки известного человека" };
-const STATUS = { review: "Агенты проверяют", reviewed: "Готовлю картинку", held: "Не прошёл проверку", pending: "Ждёт тебя", editing: "Правлю", approved: "Одобрен", scheduled: "Запланирован", published: "Опубликован",
+const STATUS = { review: "Агенты проверяют", reviewed: "Готовлю картинку", held: "Не прошёл проверку", pending: "Ждёт тебя", reserve: "Резерв", editing: "Правлю", approved: "Одобрен", scheduled: "Запланирован", published: "Опубликован",
   failed: "Ошибка выкладки", trash: "Мусор", rejected: "Переписываю", draft: "В работе", review: "В работе" };
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
 const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"]];
-const TABS = [["pending", "Ждут тебя"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["trash", "Мусор"], ["all", "Все"]];
+const TABS = [["pending", "Ждут тебя"], ["reserve", "Резерв"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["trash", "Мусор"], ["all", "Все"]];
 const WD = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const NOTE = { ap: "✅ Беру", ed: "✏️ Правки ушли", rw: "❌ Переписываю", tr: "🗑 В мусор", im: "🖼 Ищу другую картинку", pt: "🕒 Меняю время",
   un: "↩️ Снимаю с выкладки", ck: "☑️ Отметил", idea: "💡 Идея ушла" };
@@ -262,6 +262,7 @@ const pendOf = (p) => { const x = PEND[p.id]; if (!x) return null;
 const stOf = (p) => { const x = pendOf(p); return x && OPT[x.a] ? OPT[x.a] : p.status; };
 const inTab = (p, t) => { const s = stOf(p);
   if (t === "pending") return s === "pending" || s === "failed";
+  if (t === "reserve") return s === "reserve";
   if (t === "plan") return s === "scheduled" || s === "approved";
   if (t === "out") return s === "published";
   if (t === "trash") return s === "trash";
@@ -322,7 +323,7 @@ function metaHtml(p) {
 function actsHtml(p) {
   const st = stOf(p), id = esc(p.id), pd = !!pendOf(p);
   const B = (a, t, cls) => `<button class="b ${cls || ""}" data-act="${a}" data-id="${id}" ${pd ? "disabled" : ""}>${t}</button>`;
-  if (st === "pending" || st === "failed")
+  if (st === "pending" || st === "failed" || st === "reserve")
     return `<div class="acts">${B("ap", "✅ Беру", "pri")}${B("fx", "🔧 Мелочи агентов")}${B("ed", "✏️ Правки")}${B("rw", "❌ Переписать")}${B("im", "🖼 Другая картинка")}${B("pt", "🕒 Время")}${B("tr", "🗑 Мусор", "red")}</div>`;
   if (st === "scheduled" || st === "approved") return `<div class="acts">${B("pt", "🕒 Время", "pri")}${st === "scheduled" ? B("un", "↩️ Снять с выкладки", "red") : ""}${B("ed", "✏️ Правки")}</div>`;
   return "";
@@ -344,7 +345,7 @@ function rowHtml(p) {
 // ---------- render: tabs ----------
 function renderTabs() {
   const ps = DATA ? DATA.posts : [];
-  const cnt = { pending: ps.filter((p) => inTab(p, "pending")).length, plan: ps.filter((p) => inTab(p, "plan")).length,
+  const cnt = { pending: ps.filter((p) => inTab(p, "pending")).length, plan: ps.filter((p) => inTab(p, "plan")).length, reserve: ps.filter((p) => inTab(p, "reserve")).length,
     out: ps.filter((p) => inTab(p, "out")).length, trash: ps.filter((p) => inTab(p, "trash")).length, all: ps.length,
     today: DATA && DATA.today ? (DATA.today.checklist || []).filter((c) => !ckDone(c)).length : 0 };
   $("#tabs").innerHTML = TABS.map(([k, n]) => `<button class="tab ${tab === k ? "on" : ""}" data-t="${k}">${n}${cnt[k] ? `<span class="n">${cnt[k]}</span>` : ""}</button>`).join("");
@@ -364,11 +365,11 @@ function render() {
   else {
     const l = ps.filter((p) => inTab(p, tab)).sort(tab === "plan" ? byPlan : byNew);
     if (tab === "all") {
-      const order = ["pending", "failed", "editing", "rejected", "draft", "review", "approved", "scheduled", "published", "trash"];
+      const order = ["pending", "reserve", "failed", "editing", "rejected", "draft", "review", "approved", "scheduled", "published", "trash"];
       const g = {}; l.forEach((p) => { (g[stOf(p)] = g[stOf(p)] || []).push(p); });
       h = Object.keys(g).sort((a, b) => order.indexOf(a) - order.indexOf(b)).map((s) => `<div class="sec">${esc(STATUS[s] || s)} · ${g[s].length}</div>${g[s].map(rowHtml).join("")}`).join("");
     } else h = l.map(rowHtml).join("");
-    if (!l.length) h = `<div class="empty">${{ plan: "Нет запланированных постов", out: "Пока ничего не опубликовано", trash: "Мусор пуст", all: "Постов пока нет" }[tab]}</div>`;
+    if (!l.length) h = `<div class="empty">${{ reserve: "Резерв пуст: система допишет посты сама", plan: "Нет запланированных постов", out: "Пока ничего не опубликовано", trash: "Мусор пуст", all: "Постов пока нет" }[tab]}</div>`;
   }
   $("#list").innerHTML = h;
   fillImages($("#list"));
