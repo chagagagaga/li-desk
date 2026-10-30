@@ -166,7 +166,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-29-d";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-10-30-a";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -183,7 +183,15 @@ const STATUS = { review: "Агенты проверяют", reviewed: "Гото�
   failed: "Ошибка выкладки", trash: "Мусор", rejected: "Переписываю", draft: "В работе", review: "В работе" };
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
-const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"]];
+const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"], ["kill", "Kill"], ["position", "Позиция"], ["audience", "ЦА"], ["pmm", "PMM"]];
+const READER_RU = { Maya: "Майя, CEO EO-стартапа", Tom: "Том, CCO крупной EO", Priya: "Прия, PMM geo SaaS", Dan: "Дэн, кредитный директор агробанка", Claire: "Клэр, партнёр space-фонда" };
+const ACTION_RU = { ignore: "пролистает", like: "лайк", comment: "коммент", save: "сохранит", repost: "репост", follow: "подпишется", DM: "напишет в личку" };
+function panelHtml(p) {
+  const pn = p.panel || {}; let h = "";
+  if ((pn.readers || []).length) h += `<details open><summary>👥 Панель ЦА: как прочитали</summary><ul class="notes">${pn.readers.map((r) => `<li><b>${esc(READER_RU[r.name] || r.name)}</b>: ${esc(r.score)}/10 · авторитет ${esc(r.authority)}/10 · репутация ${r.reputation > 0 ? "+" : ""}${esc(r.reputation)} · ${esc(ACTION_RU[r.action] || r.action || "")}${r.stop === false ? " · хук не остановил" : ""}<br><i>${esc(r.inner_ru || "")}</i></li>`).join("")}</ul></details>`;
+  if ((pn.contradictions || []).length) h += `<div class="kv"><b>🧷 Противоречия</b></div><ul class="notes">${pn.contradictions.map((c) => `<li>с ${esc(c.with)}: «${esc(c.this_post)}» vs «${esc(c.other)}»</li>`).join("")}</ul>`;
+  return h;
+}
 const TABS = [["pending", "Ждут тебя"], ["cal", "Календарь"], ["plan", "Запланированы"], ["out", "Опубликовано"], ["today", "Сегодня"], ["nums", "Цифры"], ["trash", "Мусор"], ["all", "Все"]];
 const WD = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const NOTE = { ap: "✅ Беру", ed: "✏️ Правки ушли", rw: "❌ Переписываю", tr: "🗑 В мусор", im: "🖼 Ищу другую картинку", pt: "🕒 Меняю время",
@@ -296,6 +304,7 @@ function liPreview(p) {
   const ims = p.images || [];
   if (ims.length === 1 && p.format !== "carousel") media = `<div class="media"><img data-src="${esc(ims[0])}" alt=""></div>`;
   else if (ims.length) media = `<div class="media"><div class="car" data-car="${esc(p.id)}">${ims.map((s) => `<div><img data-src="${esc(s)}" alt=""></div>`).join("")}</div><span class="cnt">1 / ${ims.length}</span></div>`;
+  if (p.visual_ru && ims.length) media += `<div class="kv" style="padding:8px 16px 0;white-space:pre-line">🇷🇺 <b>На картинке:</b>\n${esc(p.visual_ru)}</div>`;
   if (p.pdf) media += `<div class="kv" style="padding:8px 16px 0"><a href="#" data-pdf="${esc(p.pdf)}">📄 Открыть PDF карусели</a></div>`;
   return `<div class="li"><div class="li-h"><div class="av">${DATA && DATA.avatar ? `<img data-src="${esc(DATA.avatar)}" alt="">` : "AC"}</div><div class="who"><b>Alex Chagaydak</b>
     <span>Helping satellite-data companies sell to non-space buyers</span><span>№ ${esc(p.id)} · ${p.status === "published" && p.published_at ? esc(dm(p.published_at)) : p.plan_at ? "🕒 " + esc(wdOf(p.plan_at) + " " + dm(p.plan_at)) : "сейчас"} · 🌐</span></div></div>
@@ -318,6 +327,7 @@ function metaHtml(p) {
   const m = p.metrics || {};
   if (Object.keys(m).length) h += `<div class="metr"><span>👁 <b>${fmtN(m.impressions)}</b></span><span>👍 <b>${fmtN(m.reactions)}</b></span><span>💬 <b>${fmtN(m.comments)}</b></span><span>🔁 <b>${fmtN(m.reposts)}</b></span></div>`;
   if (a) h += `<div class="sc"><div class="avg"><b>${a}</b>среднее</div>${SCORE.map(([k, n]) => `<div><b>${typeof (p.scores || {})[k] === "number" ? p.scores[k] : "–"}</b>${n}</div>`).join("")}</div>`;
+  h += panelHtml(p);
   if ((p.notes || []).length) h += `<div class="kv"><b>Заметки агентов</b></div><ul class="notes">${p.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
   if ((p.sources || []).length) h += `<details><summary>Источники (${p.sources.length})</summary><ul class="notes">${p.sources.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.url)}</a>` : esc(s.title)}</li>`).join("")}</ul></details>`;
   if ((p.history || []).length) h += `<details><summary>История (${p.history.length})</summary><div class="hist">${p.history.slice().reverse().map((x) => `<div>${esc(dm(x.t))} · ${esc(x.what)}</div>`).join("")}</div></details>`;
