@@ -166,7 +166,7 @@ summary { cursor: pointer; color: var(--mute); }
 <button id="idea">💡 Идея</button>
 <div id="toast"></div>
 <script>
-const APP_VER = "2026-10-30-a";  // bump on every change: an old cached copy (Telegram) reloads itself
+const APP_VER = "2026-11-18-a";  // bump on every change: an old cached copy (Telegram) reloads itself
 const REPO = "chagagagaga/li-desk";
 const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.platform && Telegram.WebApp.platform !== "unknown" ? Telegram.WebApp : null;
 const KB = TG && !TG.initData;  // opened from a keyboard button: sendData works only there
@@ -184,6 +184,9 @@ const STATUS = { review: "Агенты проверяют", reviewed: "Гото�
 const STAGE = { "охват": "Охват", "доверие": "Доверие", "продажа": "Продажа" };
 const FORMAT = { text: "Текст", image: "Картинка", carousel: "Карусель" };
 const SCORE = [["facts", "Факты"], ["strategy", "Стратегия"], ["algo", "Алгоритм"], ["producer", "Продюсер"], ["slop", "Анти-слоп"], ["kill", "Kill"], ["position", "Позиция"], ["audience", "ЦА"], ["pmm", "PMM"]];
+// 18.11: scheme v3 (from 10.11) scores facts / kill / audience / pmm / check and quality = (kill + 2×ЦА + 2×PMM) / 5
+const SCORE_V3 = [["facts", "Факты"], ["kill", "Kill"], ["audience", "ЦА"], ["pmm", "PMM"], ["check", "Проверка"]];
+const isV3 = (sc) => !!sc && typeof sc.quality === "number";
 const READER_RU = { Maya: "Майя, CEO EO-стартапа", Tom: "Том, CCO крупной EO", Priya: "Прия, PMM geo SaaS", Dan: "Дэн, кредитный директор агробанка", Claire: "Клэр, партнёр space-фонда" };
 const ACTION_RU = { ignore: "пролистает", like: "лайк", comment: "коммент", save: "сохранит", repost: "репост", follow: "подпишется", DM: "напишет в личку" };
 function panelHtml(p) {
@@ -283,7 +286,7 @@ const postText = (p, lang) => { const b = String((lang === "ru" ? p.body_ru : p.
 const title = (p) => (String(p.hook || p.body_en || p.body_ru || "").trim().split("\n")[0] || p.id).slice(0, 140);
 const dm = (t) => { const m = /^(\d{4})-(\d\d)-(\d\d)[ T]?(\d\d:\d\d)?/.exec(t || ""); return m ? m[3] + "." + m[2] + (m[4] ? " " + m[4] : "") : String(t || ""); };
 const wdOf = (iso) => WD[(new Date(iso.slice(0, 10) + "T12:00:00").getDay() + 6) % 7];
-const avg = (sc) => { const v = SCORE.map(([k]) => sc && sc[k]).filter((x) => typeof x === "number"); return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : ""; };
+const avg = (sc) => { if (isV3(sc)) return sc.quality.toFixed(1); const v = SCORE.map(([k]) => sc && sc[k]).filter((x) => typeof x === "number"); return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : ""; };
 const almatyNow = () => new Date(Date.now() + 5 * 3600000).toISOString();  // Almaty = UTC+5
 const fmtN = (n) => typeof n === "number" ? (n >= 10000 ? (n / 1000).toFixed(1).replace(".0", "") + "k" : String(n)) : "–";
 
@@ -326,7 +329,9 @@ function metaHtml(p) {
   if (p.published_at) h += `<div class="kv">📢 Вышел: <b>${esc(dm(p.published_at))}</b>${p.permalink ? ` · <a href="${esc(p.permalink)}" target="_blank" rel="noopener">открыть в LinkedIn</a>` : ""}</div>`;
   const m = p.metrics || {};
   if (Object.keys(m).length) h += `<div class="metr"><span>👁 <b>${fmtN(m.impressions)}</b></span><span>👍 <b>${fmtN(m.reactions)}</b></span><span>💬 <b>${fmtN(m.comments)}</b></span><span>🔁 <b>${fmtN(m.reposts)}</b></span></div>`;
-  if (a) h += `<div class="sc"><div class="avg"><b>${a}</b>среднее</div>${SCORE.map(([k, n]) => `<div><b>${typeof (p.scores || {})[k] === "number" ? p.scores[k] : "–"}</b>${n}</div>`).join("")}</div>`;
+  if (a) { const v3 = isV3(p.scores), q = v3 ? p.scores.quality : null;
+    h += `<div class="sc"><div class="avg"><b>${a}</b>${v3 ? "качество" + (q < 7 ? " ⚠️" : "") : "среднее"}</div>${(v3 ? SCORE_V3 : SCORE).map(([k, n]) => `<div><b>${typeof (p.scores || {})[k] === "number" ? p.scores[k] : "–"}</b>${n}</div>`).join("")}</div>`;
+    h += `<div class="kv" style="font-size:12px;color:var(--mute)">${v3 ? "Новая схема: качество = (Kill + 2×ЦА + 2×PMM) / 5, планка 7" : "Старая схема проверки (до 10.11): с новыми оценками не сравнивается"}</div>`; }
   h += panelHtml(p);
   if ((p.notes || []).length) h += `<div class="kv"><b>Заметки агентов</b></div><ul class="notes">${p.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
   if ((p.sources || []).length) h += `<details><summary>Источники (${p.sources.length})</summary><ul class="notes">${p.sources.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.url)}</a>` : esc(s.title)}</li>`).join("")}</ul></details>`;
